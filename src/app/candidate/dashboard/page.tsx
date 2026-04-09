@@ -1,4 +1,5 @@
 import { UserMenu } from "@/components/auth/user-menu";
+import { CandidateDashboard } from "@/features/candidate/components/candidate-dashboard";
 
 export default function CandidateDashboardPage() {
   return (
@@ -8,8 +9,9 @@ export default function CandidateDashboardPage() {
         <UserMenu />
       </header>
       <p className="text-sm text-muted-foreground">
-        Auth is active. Next section will load available exam cards.
+        See all assigned exams and start your assessment.
       </p>
+      <CandidateDashboard />
     </main>
   );
 }

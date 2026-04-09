@@ -28,3 +28,14 @@ export type CandidateExamRecord = {
   email: string;
   status: "pending" | "completed";
 };
+
+export type SubmitExamInput = {
+  examId: string;
+  answers: {
+    questionId: string;
+    type: QuestionType;
+    value: string | string[];
+  }[];
+  violations: number;
+  submittedAt: string;
+};
