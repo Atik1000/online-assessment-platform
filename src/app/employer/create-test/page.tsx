@@ -1,3 +1,9 @@
+import { CreateTestForm } from "@/features/employer/components/create-test-form";
+
 export default function EmployerCreateTestPage() {
-  return <div className="p-6">Create Test</div>;
+  return (
+    <main className="p-6">
+      <CreateTestForm />
+    </main>
+  );
 }

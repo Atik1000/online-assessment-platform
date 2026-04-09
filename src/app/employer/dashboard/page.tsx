@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { UserMenu } from "@/components/auth/user-menu";
 import { AppButton } from "@/components/shared/app-button";
+import { EmployerDashboard } from "@/features/employer/components/employer-dashboard";
 
 export default function EmployerDashboardPage() {
   return (
@@ -11,11 +12,12 @@ export default function EmployerDashboardPage() {
         <UserMenu />
       </header>
       <p className="text-sm text-muted-foreground">
-        Auth is active. Next section will load exam cards from mock API.
+        View and manage exam slots and assigned candidates.
       </p>
       <Link href="/employer/create-test">
         <AppButton>Create Test</AppButton>
       </Link>
+      <EmployerDashboard />
     </main>
   );
 }
