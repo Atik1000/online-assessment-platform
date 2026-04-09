@@ -1,1 +1,1 @@
-export type UserRole = "employer" | "candidate";
+export * from "@/types/auth";
