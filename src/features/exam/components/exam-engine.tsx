@@ -4,9 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { AppButton } from "@/components/shared/app-button";
+import { OfflineBanner } from "@/components/shared/offline-banner";
 import { Timer } from "@/components/shared/timer";
 import { useCheatingDetection } from "@/hooks/useCheatingDetection";
 import { useExam } from "@/hooks/useExam";
+import { useOfflineSync } from "@/hooks/useOfflineSync";
 import { useTimer } from "@/hooks/useTimer";
 
 type ExamEngineProps = {
@@ -16,6 +18,7 @@ type ExamEngineProps = {
 export function ExamEngine({ examId }: ExamEngineProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const examState = useExam(examId);
+  const offlineSync = useOfflineSync();
 
   useEffect(() => {
     examState.startExam(examId);
@@ -23,9 +26,16 @@ export function ExamEngine({ examId }: ExamEngineProps) {
 
   const onSubmit = useCallback(async () => {
     if (examState.submitted || examState.submitPending) return;
-    await examState.submitCurrentExam();
+    const payload = examState.getSubmissionPayload();
+    if (!payload) return;
+    const result = await offlineSync.submitWithOfflineSupport(payload);
+    await examState.markSubmitted(payload);
+    if (result.queued) {
+      toast.info("Exam stored offline. It will auto-submit once connected.");
+      return;
+    }
     toast.success("Exam submitted");
-  }, [examState]);
+  }, [examState, offlineSync]);
 
   const timer = useTimer(examState.exam?.duration ?? 0, onSubmit);
 
@@ -62,6 +72,7 @@ export function ExamEngine({ examId }: ExamEngineProps) {
 
   return (
     <main className="space-y-4 p-6">
+      {offlineSync.isOffline ? <OfflineBanner pendingCount={offlineSync.pendingCount} /> : null}
       <header className="flex items-center justify-between rounded-xl border p-4">
         <div>
           <h1 className="text-xl font-semibold">{examState.exam.title}</h1>

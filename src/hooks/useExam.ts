@@ -3,9 +3,9 @@
 import { useCallback, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { getExamById, submitExam } from "@/services/exam.service";
+import { getExamById } from "@/services/exam.service";
 import { useExamSessionStore } from "@/store/exam-session-store";
-import type { QuestionType } from "@/types/exam";
+import type { QuestionType, SubmitExamInput } from "@/types/exam";
 
 export function useExam(examId: string) {
   const queryClient = useQueryClient();
@@ -17,7 +17,7 @@ export function useExam(examId: string) {
   });
 
   const submitMutation = useMutation({
-    mutationFn: submitExam,
+    mutationFn: async (payload: SubmitExamInput) => payload,
     onSuccess: async () => {
       session.markSubmitted();
       await queryClient.invalidateQueries({ queryKey: ["exam", examId] });
@@ -31,16 +31,27 @@ export function useExam(examId: string) {
     [session],
   );
 
-  const submitCurrentExam = useCallback(async () => {
-    if (!examQuery.data) return;
+  const getSubmissionPayload = useCallback((): SubmitExamInput | null => {
+    if (!examQuery.data) return null;
 
-    await submitMutation.mutateAsync({
+    return {
       examId,
       answers: Object.values(session.answers),
       violations: session.violations,
       submittedAt: new Date().toISOString(),
-    });
-  }, [examId, examQuery.data, session.answers, session.violations, submitMutation]);
+    };
+  }, [examId, examQuery.data, session.answers, session.violations]);
+
+  const markSubmitted = useCallback(async (payload: SubmitExamInput) => {
+    await submitMutation.mutateAsync(payload);
+  }, [submitMutation]);
+
+  const submitCurrentExam = useCallback(async () => {
+    const payload = getSubmissionPayload();
+    if (!payload) return null;
+    await markSubmitted(payload);
+    return payload;
+  }, [getSubmissionPayload, markSubmitted]);
 
   return useMemo(
     () => ({
@@ -53,6 +64,8 @@ export function useExam(examId: string) {
       startExam: session.startExam,
       setAnswer,
       incrementViolation: session.incrementViolation,
+      getSubmissionPayload,
+      markSubmitted,
       submitCurrentExam,
       submitPending: submitMutation.isPending,
       clearSession: session.clearSession,
@@ -68,6 +81,8 @@ export function useExam(examId: string) {
       session.incrementViolation,
       session.clearSession,
       setAnswer,
+      getSubmissionPayload,
+      markSubmitted,
       submitCurrentExam,
       submitMutation.isPending,
     ],
